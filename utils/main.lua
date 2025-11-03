@@ -1,4 +1,31 @@
---- CREDITS: mirow
+Shared = Shared or {
+    Table = {
+        ---@param table table
+        ---@param key string
+        ---@param value any
+        ---@return any, number?
+        findByKey = function(table, key, value)
+            for i = 1, #table do
+                if table[i][key] == value then
+                    return table[i], i
+                end
+            end
+            return nil, nil
+        end,
+        ---@param table table
+        ---@param callback fun(value: any): boolean
+        ---@return table
+        filter = function(table, callback)
+            local newTable = {}
+            for i = 1, #table do
+                if callback(table[i]) then
+                    newTable[#newTable + 1] = table[i]
+                end
+            end
+            return newTable
+        end,
+    }
+}
 
 if IsDuplicityVersion() then
     Server = {}
@@ -17,13 +44,13 @@ if IsDuplicityVersion() then
                     description = webhook.description,
                     fields = fields,
                     footer = Config.ServerConfig.baseData.footer,
-                    timestamp = Config.ServerConfig.baseData.sendTimestamp and os.date('!%Y-%m-%dT%H:%M:%SZ')
+                    timestamp = Config.ServerConfig.baseData.sendTimestamp and os.date("!%Y-%m-%dT%H:%M:%SZ")
                 }
             }
         }
 
-        PerformHttpRequest(webhook, function() end, 'POST', json.encode(data),
-            { ['Content-Type'] = 'application/json' })
+        PerformHttpRequest(webhook, function() end, "POST", json.encode(data),
+            { ["Content-Type"] = "application/json" })
     end
 else
     Client                               = {}
@@ -42,11 +69,11 @@ else
         SetBlipColour(blip, data.color or 0)
         SetBlipScale(blip, data.scale or 0.8)
         SetBlipAsShortRange(blip, true)
-        BeginTextCommandSetBlipName('STRING')
+        BeginTextCommandSetBlipName("STRING")
         AddTextComponentSubstringPlayerName(data.label)
 
         if data.category then
-            AddTextEntry('BLIP_CAT_' .. data.category, data.label)
+            AddTextEntry("BLIP_CAT_" .. data.category, data.label)
         end
 
         EndTextCommandSetBlipName(blip)
@@ -148,18 +175,18 @@ else
         })
 
         if optionalData then
-            if optionalData and type(optionalData.focus) == 'table' then
+            if optionalData and type(optionalData.focus) == "table" then
                 local hasFocus = optionalData.focus.hasFocus
                 local hasCursor = optionalData.focus.hasCursor
 
                 SetNuiFocus(hasFocus, hasCursor)
             end
 
-            if type(optionalData.keepInput) == 'boolean' then
+            if type(optionalData.keepInput) == "boolean" then
                 SetNuiFocusKeepInput(optionalData.keepInput)
             end
 
-            if type(optionalData.freezePlayer) == 'boolean' then
+            if type(optionalData.freezePlayer) == "boolean" then
                 FreezeEntityPosition(PlayerPedId(), optionalData.freezePlayer)
             end
         end
@@ -170,7 +197,7 @@ else
     function Client.registerNUICallback(action, cb)
         RegisterNUICallback(action, function(data, callback)
             local response = cb(data)
-            callback(response and response or 'ok')
+            callback(response and response or "ok")
         end)
     end
 
@@ -178,7 +205,7 @@ else
     ---@param fn function
     function Client.onNet(event, fn)
         RegisterNetEvent(event, function(...)
-            if source == '' then return end
+            if source == "" then return end
 
             fn(...)
         end)
@@ -198,11 +225,11 @@ else
         end
     end
 
-    Client.registerNUICallback('ready', function()
+    Client.registerNUICallback("ready", function()
         Client.isNuiReady = true
     end)
 
-    AddEventHandler('onResourceStop', function(resource)
+    AddEventHandler("onResourceStop", function(resource)
         if resource ~= cache.resource then return end
 
         for _, entity in pairs(spawnedPeds) do
