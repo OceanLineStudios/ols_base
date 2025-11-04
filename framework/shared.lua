@@ -3,20 +3,20 @@ Shared = Shared or {}
 local frameworkType = string.lower(Config.Framework or "esx")
 
 local frameWorkTable = {
-    esx = require("framework.implementations.esx"),
-    qbcore = require("framework.implementations.qbcore"),
-    qbox = require("framework.implementations.qbox"),
-    custom = require("framework.implementations.custom")
+    esx = "framework.implementations.esx",
+    qbcore = "framework.implementations.qbcore",
+    qbox = "framework.implementations.qbox",
+    custom = "framework.implementations.custom"
 }
 
-if frameWorkTable[frameworkType] then
+if not frameWorkTable[frameworkType] then
     print("^1[ERROR]^7 Invalid framework specified in config: " .. tostring(Config.Framework))
-    print("^1[ERROR]^7 Valid options: esx, qbcore, custom")
+    print("^1[ERROR]^7 Valid options: esx, qbcore, qbox, custom")
     print("^1[ERROR]^7 Falling back to ESX")
     frameworkType = "esx"
 end
 
-Framework = frameWorkTable[frameworkType]
+Framework = require(frameWorkTable[frameworkType])
 
 if not Framework then
     print("^1[ERROR]^7 Framework implementation not found for: " .. frameworkType)
