@@ -3,10 +3,6 @@
 ---@field description string
 ---@field url string
 
----@class ServerConfig
----@field baseData BaseData
----@field webhooks Webhooks
-
 ---@class EmbedField
 ---@field name string
 ---@field value string
