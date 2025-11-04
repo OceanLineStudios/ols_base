@@ -50,6 +50,38 @@ if IsDuplicityVersion() then
         PerformHttpRequest(webhook.url, function() end, "POST", json.encode(data),
             { ["Content-Type"] = "application/json" })
     end
+
+    ---@param name string
+    ---@param columns table<string, string>
+    function Server.createTable(name, columns)
+        local columnDefinitions = {}
+
+        for columnName, columnType in pairs(columns) do
+            columnDefinitions[#columnDefinitions + 1] = "`" .. columnName .. "` " .. columnType
+        end
+
+        local query = "CREATE TABLE IF NOT EXISTS `" .. name .. "` (" .. table.concat(columnDefinitions, ", ") .. ")"
+
+        MySQL.Async.execute(query, {}, function(affectedRows)
+            if affectedRows > 0 then
+                print("^2[OLS]^7 Created table: " .. name)
+            else
+                print("^1[OLS]^7 Failed to create table: " .. name)
+            end
+        end)
+    end
+
+    ---@param tableName string
+    ---@param query string
+    function Server.alterTable(tableName, query)
+        MySQL.Async.execute("ALTER TABLE `" .. tableName .. "` " .. query, {}, function(affectedRows)
+            if affectedRows > 0 then
+                print("^2[OLS]^7 Altered table: " .. tableName)
+            else
+                print("^1[OLS]^7 Failed to alter table: " .. tableName)
+            end
+        end)
+    end
 else
     local spawnedPeds, spawnedPedCount   = {}, 0
     local createdBlips, createdBlipCount = {}, 0
