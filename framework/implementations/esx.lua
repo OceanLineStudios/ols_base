@@ -1,4 +1,5 @@
-ESX = exports["es_extended"]:getSharedObject()
+local ESX = exports["es_extended"]:getSharedObject()
+local Table = require("utils.main").Table
 
 local registeredCallbacks = {
     ---@type table<number, fun(source: number, isNew: boolean)>
@@ -420,9 +421,9 @@ else
         local playerData = ESX.GetPlayerData()
         return {
             accounts = {
-                money = Shared.Table.findByKey(playerData.accounts, "money")?.money or 0,
-                black_money = Shared.Table.findByKey(playerData.accounts, "black_money")?.black_money or 0,
-                bank = Shared.Table.findByKey(playerData.accounts, "bank")?.bank or 0
+                money = Table.findByKey(playerData.accounts, "money")?.money or 0,
+                black_money = Table.findByKey(playerData.accounts, "black_money")?.black_money or 0,
+                bank = Table.findByKey(playerData.accounts, "bank")?.bank or 0
             },
             job = {
                 name = playerData.job.name,

@@ -1,5 +1,3 @@
-Shared = Shared or {}
-
 local frameworkType = string.lower(Config.Framework or "esx")
 
 local frameWorkTable = {
@@ -16,7 +14,7 @@ if not frameWorkTable[frameworkType] then
     frameworkType = "esx"
 end
 
-Framework = require(frameWorkTable[frameworkType])
+local Framework = require(frameWorkTable[frameworkType])
 
 if not Framework then
     print("^1[ERROR]^7 Framework implementation not found for: " .. frameworkType)
@@ -26,6 +24,11 @@ else
 end
 
 ---@return "esx"|"qbcore"|"qbox"|"custom"
-function Shared.getFrameworkType()
+local function getFrameworkType()
     return frameworkType
 end
+
+return {
+    getFrameworkType = getFrameworkType,
+    Framework = Framework
+}

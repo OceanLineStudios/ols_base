@@ -1,35 +1,36 @@
-Shared = Shared or {
-    Table = {
-        ---@param table table
-        ---@param key string
-        ---@param value any
-        ---@return any, number?
-        findByKey = function(table, key, value)
-            for i = 1, #table do
-                if table[i][key] == value then
-                    return table[i], i
-                end
+local Table = {
+    ---@param table table
+    ---@param key string
+    ---@param value any
+    ---@return any, number?
+    findByKey = function(table, key, value)
+        for i = 1, #table do
+            if table[i][key] == value then
+                return table[i], i
             end
-            return nil, nil
-        end,
-        ---@param table table
-        ---@param callback fun(value: any): boolean
-        ---@return table
-        filter = function(table, callback)
-            local newTable = {}
-            for i = 1, #table do
-                if callback(table[i]) then
-                    newTable[#newTable + 1] = table[i]
-                end
+        end
+        return nil, nil
+    end,
+    ---@param table table
+    ---@param callback fun(value: any): boolean
+    ---@return table
+    filter = function(table, callback)
+        local newTable = {}
+        for i = 1, #table do
+            if callback(table[i]) then
+                newTable[#newTable + 1] = table[i]
             end
-            return newTable
-        end,
-    }
+        end
+        return newTable
+    end,
+}
+
+local Server = {}
+local Client = {
+    isNuiReady = false,
 }
 
 if IsDuplicityVersion() then
-    Server = {}
-
     ---@param webhookName WebhookName
     ---@param fields EmbedField[]
     function Server.sendWebhook(webhookName, fields)
@@ -53,9 +54,6 @@ if IsDuplicityVersion() then
             { ["Content-Type"] = "application/json" })
     end
 else
-    Client                               = {}
-    Client.isNuiReady                    = false
-
     local spawnedPeds, spawnedPedCount   = {}, 0
     local createdBlips, createdBlipCount = {}, 0
 
@@ -237,3 +235,9 @@ else
         end
     end)
 end
+
+return {
+    Table = Table,
+    Server = Server,
+    Client = Client
+}

@@ -24,3 +24,8 @@ function Config.ShowNotification(title, message, type, source)
         type = type
     })
 end
+
+---@param message string
+function Config.ShowHelpNotification(message)
+    return ESX.ShowHelpNotification(message)
+end
