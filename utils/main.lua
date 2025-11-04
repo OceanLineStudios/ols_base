@@ -31,26 +31,23 @@ local Client = {
 }
 
 if IsDuplicityVersion() then
-    ---@param webhookName WebhookName
+    ---@param webhook Webhook
     ---@param fields EmbedField[]
-    function Server.sendWebhook(webhookName, fields)
-        local webhook = Config.ServerConfig.webhooks[webhookName]
-        if not webhook then return end
-
+    function Server.sendWebhook(webhook, fields)
         local data = {
-            username = Config.ServerConfig.baseData.username,
+            username = Config.WebhookBase.username,
             embeds = {
                 {
                     title = webhook.title,
                     description = webhook.description,
                     fields = fields,
-                    footer = Config.ServerConfig.baseData.footer,
-                    timestamp = Config.ServerConfig.baseData.sendTimestamp and os.date("!%Y-%m-%dT%H:%M:%SZ")
+                    footer = Config.WebhookBase.footer,
+                    timestamp = Config.WebhookBase.sendTimestamp and os.date("!%Y-%m-%dT%H:%M:%SZ")
                 }
             }
         }
 
-        PerformHttpRequest(webhook, function() end, "POST", json.encode(data),
+        PerformHttpRequest(webhook.url, function() end, "POST", json.encode(data),
             { ["Content-Type"] = "application/json" })
     end
 else

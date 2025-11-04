@@ -1,8 +1,3 @@
----@class Webhooks
----@field exampleWebhook Webhook
-
----@alias WebhookName "exampleWebhook"
-
 ---@class Webhook
 ---@field title string
 ---@field description string

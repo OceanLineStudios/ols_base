@@ -5,6 +5,15 @@ Config.SharedObject = "esx:getSharedObject"
 
 Config.MenuAlign = "top-left" -- if you using a menu
 
+Config.WebhookBase = {
+    username = "OceanLineStudios",
+    color = 16711680,
+    footer = {
+        text = "OceanLineStudios"
+    },
+    sendTimestamp = true,
+}
+
 ---@param title string
 ---@param message string
 ---@param type "success"|"info"|"error"|"warning"
