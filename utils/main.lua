@@ -1,3 +1,6 @@
+---@diagnostic disable-next-line: missing-parameter
+lib.locale()
+
 local Table = {
     ---@param table table
     ---@param key string
@@ -30,27 +33,10 @@ local Client = {
     isNuiReady = false,
 }
 
+local Letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+local Numbers = "0123456789"
+
 if IsDuplicityVersion() then
-    ---@param webhook Webhook
-    ---@param fields EmbedField[]
-    function Server.sendWebhook(webhook, fields)
-        local data = {
-            username = Config.WebhookBase.username,
-            embeds = {
-                {
-                    title = webhook.title,
-                    description = webhook.description,
-                    fields = fields,
-                    footer = Config.WebhookBase.footer,
-                    timestamp = Config.WebhookBase.sendTimestamp and os.date("!%Y-%m-%dT%H:%M:%SZ")
-                }
-            }
-        }
-
-        PerformHttpRequest(webhook.url, function() end, "POST", json.encode(data),
-            { ["Content-Type"] = "application/json" })
-    end
-
     ---@param name string
     ---@param columns table<string, string>
     function Server.createTable(name, columns)
@@ -61,30 +47,56 @@ if IsDuplicityVersion() then
         end
 
         local query = "CREATE TABLE IF NOT EXISTS `" .. name .. "` (" .. table.concat(columnDefinitions, ", ") .. ")"
+        local doesExist = MySQL.scalar.await("SHOW TABLES LIKE ?", { "%" .. name .. "%" })
 
-        MySQL.Async.execute(query, {}, function(affectedRows)
-            if affectedRows > 0 then
-                print("^2[OLS]^7 Created table: " .. name)
-            else
-                print("^1[OLS]^7 Failed to create table: " .. name)
-            end
-        end)
+        if not doesExist then
+            MySQL.insert.await(query)
+            print("^2[OLS]^7 Created table: " .. name)
+        end
     end
 
     ---@param tableName string
     ---@param query string
     function Server.alterTable(tableName, query)
-        MySQL.Async.execute("ALTER TABLE `" .. tableName .. "` " .. query, {}, function(affectedRows)
-            if affectedRows > 0 then
-                print("^2[OLS]^7 Altered table: " .. tableName)
-            else
-                print("^1[OLS]^7 Failed to alter table: " .. tableName)
+        local doesExist = MySQL.scalar.await("SHOW TABLES LIKE ?",
+            { "%" .. tableName .. "%" })
+        if not doesExist then
+            MySQL.insert.await("ALTER TABLE `" .. tableName .. "` " .. query, {})
+            print("^2[OLS]^7 Altered table: " .. tableName)
+        end
+    end
+
+    ---@param tableName string
+    ---@return boolean
+    function Server.doesTableExist(tableName)
+        return MySQL.scalar.await("SHOW TABLES LIKE ?", { "%" .. tableName .. "%" }) ~= nil
+    end
+
+    ---@return string
+    function Server.generatePlate()
+        local plate
+        repeat
+            plate = ""
+            for i = 1, 3 do
+                local rand = math.random(#Letters)
+                plate = plate .. Letters:sub(rand, rand)
             end
-        end)
+            for i = 1, 3 do
+                local rand = math.random(#Numbers)
+                plate = plate .. Numbers:sub(rand, rand)
+            end
+        until MySQL.scalar.await("SELECT 1 FROM owned_vehicles WHERE plate = ?", { plate }) == nil
+        return plate
     end
 else
     local spawnedPeds, spawnedPedCount   = {}, 0
     local createdBlips, createdBlipCount = {}, 0
+    local spawnedProps, spawnedPropCount = {}, 0
+
+    ---@param bool boolean
+    function Client.showHud(bool)
+        Client.sendNUIMessage("hud:setVisible", bool)
+    end
 
     ---@param data Blip
     ---@return number
@@ -139,6 +151,24 @@ else
         return entity
     end
 
+    ---@param data Prop
+    ---@return number?
+    function Client.spawnProp(data)
+        local model = lib.requestModel(data.model)
+        if not model then return end
+
+        local coords = data.coords
+        local entity = CreateObject(model, coords.x, coords.y, coords.z, false, false, false)
+
+        SetEntityInvincible(entity, true)
+        SetBlockingOfNonTemporaryEvents(entity, true)
+
+        spawnedPropCount += 1
+        spawnedProps[spawnedPropCount] = entity
+
+        return entity
+    end
+
     ---@param options PointOptions
     function Client.createPoint(options)
         local marker
@@ -150,12 +180,12 @@ else
 
         return lib.points.new({
             coords = options.coords.xyz,
-            distance = 2,
+            distance = 20,
             marker = marker,
             onEnter = function(point)
                 if point.ped then Client.deleteEntity(point.ped) end
                 if options.ped then
-                    Client.spawnPed({
+                    point.ped = Client.spawnPed({
                         coords = options.coords,
                         model = options.ped.model,
                         animation = options.ped.animation,
@@ -170,7 +200,11 @@ else
             nearby = function(point)
                 if options.canInteract and not options.canInteract() then return end
                 if point.marker then point.marker:draw() end
+                if point.currentDistance > 2 then return end
                 if options.nearby then options.nearby() end
+                if options.helpNotify then
+                    TriggerEvent("hud:setHelpNotify", options.helpNotify)
+                end
 
                 if IsControlJustReleased(0, 38) then
                     if options.onInteract then options.onInteract() end
@@ -252,14 +286,24 @@ else
         end
     end
 
-    Client.registerNUICallback("ready", function()
-        Client.isNuiReady = true
+    ---@param vehicle number
+    ---@return string
+    function Client.getVehiclePlate(vehicle)
+        local plate = GetVehicleNumberPlateText(vehicle):gsub("%s+", "")
+        return plate
+    end
+
+    RegisterNetEvent("notifications:add", function(title, message, type, duration)
+        Client.notify(title, message, type, duration)
     end)
 
     AddEventHandler("onResourceStop", function(resource)
         if resource ~= cache.resource then return end
 
         for _, entity in pairs(spawnedPeds) do
+            Client.deleteEntity(entity)
+        end
+        for _, entity in pairs(spawnedProps) do
             Client.deleteEntity(entity)
         end
     end)

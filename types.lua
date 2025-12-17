@@ -25,10 +25,18 @@
 ---@class Ped : PedStruct
 ---@field coords vector4|{ x: number, y: number, z: number, w: number }
 
+---@class PropStruct
+---@field model string|number
+
+---@class Prop : PropStruct
+---@field coords vector4|{ x: number, y: number, z: number, w: number }
+
+
 ---@class PointOptions
 ---@field coords vector3 | vector4
 ---@field marker? Marker
 ---@field ped? PedStruct
+---@field helpNotify? string
 ---@field onInteract? function
 ---@field onExit? function
 ---@field nearby? function
